@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary Upgrade Challenge — B1/B2 → C1</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f5f0e8;--card:#fffdf8;--ink:#1a1714;--gold:#c4891e;--gold-l:#fde8b4;
+  --rust:#c0392b;--sage:#2d6a4f;--blue:#1e3a5f;--muted:#7a7268;--border:#e0d8cc;
+  --correct:#2d6a4f;--wrong:#c0392b;--radius:8px;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--ink);min-height:100vh;}
+
+/* HEADER */
+.header{background:var(--ink);color:#f5f0e8;padding:40px 48px 36px;position:relative;overflow:hidden;}
+.header::after{content:'C1';font-family:'Playfair Display',serif;font-size:260px;font-weight:900;
+  position:absolute;right:-20px;top:-40px;opacity:0.05;line-height:1;pointer-events:none;}
+.header .badge{display:inline-block;background:var(--gold);color:var(--ink);
+  font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;
+  padding:5px 14px;border-radius:2px;margin-bottom:16px;}
+.header h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,48px);
+  font-weight:900;line-height:1.05;margin-bottom:12px;}
+.header h1 span{color:var(--gold);}
+.header p{font-size:16px;color:#b0a898;max-width:560px;line-height:1.6;}
+
+/* SCORE BAR */
+.score-bar{background:#fff;border-bottom:2px solid var(--border);
+  padding:16px 48px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.score-item{display:flex;flex-direction:column;align-items:center;}
+.score-item .val{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--gold);line-height:1;}
+.score-item .lbl{font-size:11px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-top:2px;}
+.progress-wrap{flex:1;min-width:200px;}
+.progress-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width 0.4s ease;}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);background:#fff;padding:0 48px;}
+.tab{padding:16px 24px;font-size:14px;font-weight:600;color:var(--muted);
+  cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:all 0.2s;letter-spacing:0.02em;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab:hover{color:var(--ink);}
+
+/* MAIN CONTENT */
+.main{padding:40px 48px;max-width:900px;margin:0 auto;}
+.section{display:none;}
+.section.active{display:block;}
+
+/* FILL IN THE BLANK */
+.fitb-intro{background:var(--gold-l);border-left:4px solid var(--gold);
+  padding:16px 20px;border-radius:0 4px 4px 0;margin-bottom:32px;font-size:14px;line-height:1.6;}
+.fitb-intro strong{color:var(--ink);}
+
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 32px;margin-bottom:20px;position:relative;transition:all 0.3s;}
+.q-card.correct{border-color:var(--correct);background:#f0faf5;}
+.q-card.wrong{border-color:var(--wrong);background:#fdf0f0;}
+
+.q-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);
+  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px;}
+.q-sentence{font-family:'Playfair Display',serif;font-size:20px;line-height:1.7;
+  color:var(--ink);margin-bottom:16px;}
+.q-sentence .blank{
+  display:inline-block;min-width:160px;border-bottom:2px solid var(--gold);
+  padding:2px 8px;font-family:'DM Mono',monospace;font-size:16px;
+  color:var(--blue);vertical-align:baseline;text-align:center;
+  font-style:normal;
+}
+.hint-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.hint-box{font-size:13px;color:var(--muted);font-style:italic;}
+.hint-box strong{color:var(--gold);font-style:normal;}
+
+.options-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:16px;}
+.opt-btn{
+  padding:12px 18px;border:1.5px solid var(--border);border-radius:6px;
+  background:#fff;font-size:14px;font-family:'DM Mono',monospace;
+  color:var(--ink);cursor:pointer;transition:all 0.2s;text-align:left;
+  font-weight:500;
+}
+.opt-btn:hover{border-color:var(--gold);background:var(--gold-l);color:var(--ink);}
+.opt-btn.selected-correct{background:var(--correct);border-color:var(--correct);color:#fff;}
+.opt-btn.selected-wrong{background:var(--wrong);border-color:var(--wrong);color:#fff;}
+.opt-btn.reveal-correct{background:#e8f5ee;border-color:var(--correct);color:var(--correct);font-weight:700;}
+.opt-btn:disabled{cursor:default;}
+
+.feedback{margin-top:14px;font-size:14px;line-height:1.5;display:none;}
+.feedback.show{display:block;}
+.feedback.correct-fb{color:var(--correct);}
+.feedback.wrong-fb{color:var(--wrong);}
+
+/* MATCHING GAME */
+.match-intro{background:#e8f0fa;border-left:4px solid var(--blue);
+  padding:16px 20px;border-radius:0 4px 4px 0;margin-bottom:32px;font-size:14px;line-height:1.6;}
+
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;}
+.match-col h3{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+
+.match-item{
+  padding:14px 18px;border:1.5px solid var(--border);border-radius:6px;
+  background:#fff;font-size:15px;cursor:pointer;margin-bottom:10px;
+  transition:all 0.2s;font-family:'DM Sans',sans-serif;font-weight:500;
+  user-select:none;
+}
+.match-item.b1-item{font-size:14px;color:var(--muted);}
+.match-item.c1-item{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;}
+.match-item:hover{border-color:var(--gold);background:var(--gold-l);}
+.match-item.selected{border-color:var(--gold);background:var(--gold-l);transform:scale(1.02);}
+.match-item.matched-correct{border-color:var(--correct);background:#e8f5ee;cursor:default;opacity:0.7;}
+.match-item.matched-wrong{border-color:var(--wrong);background:#fdf0f0;}
+.match-item.matched-wrong{animation:shake 0.3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* RESULTS */
+.results-panel{display:none;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:40px;text-align:center;margin-top:32px;}
+.results-panel.show{display:block;}
+.result-score{font-family:'Playfair Display',serif;font-size:72px;font-weight:900;
+  color:var(--gold);line-height:1;}
+.result-label{font-size:16px;color:var(--muted);margin-top:8px;margin-bottom:24px;}
+.result-msg{font-size:18px;line-height:1.6;color:var(--ink);max-width:500px;margin:0 auto 28px;}
+.retry-btn{background:var(--ink);color:#fff;border:none;padding:14px 36px;
+  font-family:'DM Mono',monospace;font-size:13px;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;border-radius:4px;cursor:pointer;transition:background 0.2s;}
+.retry-btn:hover{background:var(--gold);color:var(--ink);}
+
+/* TEACHER TIP BOX */
+.teacher-box{background:var(--ink);color:#f5f0e8;border-radius:var(--radius);
+  padding:24px 28px;margin-top:40px;}
+.teacher-box h4{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);margin-bottom:10px;}
+.teacher-box p{font-size:13px;line-height:1.65;color:#b0a898;}
+
+/* NAV BUTTONS */
+.nav-row{display:flex;justify-content:flex-end;margin-top:28px;gap:12px;}
+.nav-btn{background:var(--gold);color:var(--ink);border:none;
+  padding:12px 28px;font-family:'DM Mono',monospace;font-size:13px;
+  font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  border-radius:4px;cursor:pointer;transition:all 0.2s;}
+.nav-btn:hover{background:var(--ink);color:var(--gold);}
+.nav-btn.outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+.nav-btn.outline:hover{border-color:var(--gold);color:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="badge">🎮 Interactive Exercise — C1 Vocabulary</div>
+  <h1>Vocabulary <span>Upgrade</span><br>Challenge</h1>
+  <p>Test your B1/B2 → C1 vocabulary knowledge with two exercises: fill in the blanks and word matching.</p>
+</div>
+
+<!-- SCORE BAR -->
+<div class="score-bar">
+  <div class="score-item">
+    <div class="val" id="score-display">0</div>
+    <div class="lbl">Points</div>
+  </div>
+  <div class="score-item">
+    <div class="val" id="correct-display">0</div>
+    <div class="lbl">Correct</div>
+  </div>
+  <div class="score-item">
+    <div class="val" id="total-display">0</div>
+    <div class="lbl">Answered</div>
+  </div>
+  <div class="progress-wrap">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Progress</div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('fitb')">✍️ Fill in the Blanks</div>
+  <div class="tab" onclick="switchTab('match')">🔗 Word Matching</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════ FILL IN THE BLANK SECTION ══════════════════ -->
+<div class="section active" id="sec-fitb">
+
+  <div class="fitb-intro">
+    <strong>Instructions:</strong> Each sentence below is missing a C1 word. Choose the best option from the four choices. Pay attention to context — more than one word might seem right, but only one fits perfectly. 💡
+  </div>
+
+  <!-- Q1 -->
+  <div class="q-card" id="q1">
+    <div class="q-num">Question 01 · Talking & Saying</div>
+    <div class="q-sentence">
+      The professor asked the student to <span class="blank" id="b1">___________</span> on her hypothesis before drawing any conclusions.
+    </div>
+    <div class="hint-row">
+      <div class="hint-box">💡 Hint: replace <strong>"talk more about"</strong></div>
+    </div>
+    <div class="options-grid">
+      <button class="opt-btn" onclick="checkFITB(this,'q1','elaborate on','elaborate on')">elaborate on</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q1','talk more','elaborate on')">talk more</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q1','say again','elaborate on')">say again</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q1','ask about','elaborate on')">ask about</button>
+    </div>
+    <div class="feedback" id="fb1">
+      ✅ <strong>Correct!</strong> "Elaborate on" means to give more detail about something — a perfect C1 choice in academic contexts.
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card" id="q2">
+    <div class="q-num">Question 02 · Thinking & Believing</div>
+    <div class="q-sentence">
+      Despite criticism from colleagues, the researcher <span class="blank" id="b2">___________</span> that her findings were valid.
+    </div>
+    <div class="hint-row">
+      <div class="hint-box">💡 Hint: replace <strong>"continued to believe"</strong></div>
+    </div>
+    <div class="options-grid">
+      <button class="opt-btn" onclick="checkFITB(this,'q2','believed','maintained')">believed</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q2','maintained','maintained')">maintained</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q2','thought','maintained')">thought</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q2','insisted','maintained')">insisted</button>
+    </div>
+    <div class="feedback" id="fb2">
+      ✅ <strong>Correct!</strong> "Maintained" suggests holding a position firmly despite opposition — more precise than "believed" in academic writing.
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card" id="q3">
+    <div class="q-num">Question 03 · Change & Progress</div>
+    <div class="q-sentence">
+      Without regular practice, language skills tend to <span class="blank" id="b3">___________</span> quickly.
+    </div>
+    <div class="hint-row">
+      <div class="hint-box">💡 Hint: replace <strong>"get worse"</strong></div>
+    </div>
+    <div class="options-grid">
+      <button class="opt-btn" onclick="checkFITB(this,'q3','get worse','deteriorate')">get worse</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q3','deteriorate','deteriorate')">deteriorate</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q3','become bad','deteriorate')">become bad</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q3','decline slowly','deteriorate')">decline slowly</button>
+    </div>
+    <div class="feedback" id="fb3">
+      ✅ <strong>Correct!</strong> "Deteriorate" is a single, precise C1 verb — much stronger than the two-word phrase "get worse" in formal writing.
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card" id="q4">
+    <div class="q-num">Question 04 · Problems & Qualities</div>
+    <div class="q-sentence">
+      Excessive screen time has been shown to have <span class="blank" id="b4">___________</span> effects on children's concentration.
+    </div>
+    <div class="hint-row">
+      <div class="hint-box">💡 Hint: replace <strong>"bad"</strong></div>
+    </div>
+    <div class="options-grid">
+      <button class="opt-btn" onclick="checkFITB(this,'q4','bad','detrimental')">bad</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q4','negative','detrimental')">negative</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q4','detrimental','detrimental')">detrimental</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q4','harmful big','detrimental')">harmful big</button>
+    </div>
+    <div class="feedback" id="fb4">
+      ✅ <strong>Correct!</strong> "Detrimental" collocates naturally with "effects" and signals a formal, academic register.
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card" id="q5">
+    <div class="q-num">Question 05 · Writing Essentials</div>
+    <div class="q-sentence">
+      The results of this study <span class="blank" id="b5">___________</span> a clear link between sleep and academic performance.
+    </div>
+    <div class="hint-row">
+      <div class="hint-box">💡 Hint: replace <strong>"show"</strong></div>
+    </div>
+    <div class="options-grid">
+      <button class="opt-btn" onclick="checkFITB(this,'q5','show','demonstrate')">show</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q5','demonstrate','demonstrate')">demonstrate</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q5','prove maybe','demonstrate')">prove maybe</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q5','tell','demonstrate')">tell</button>
+    </div>
+    <div class="feedback" id="fb5">
+      ✅ <strong>Correct!</strong> "Demonstrate" is the standard academic verb for presenting evidence — essential vocabulary for Bac essay writing.
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card" id="q6">
+    <div class="q-num">Question 06 · Change & Progress</div>
+    <div class="q-sentence">
+      A new teaching approach was adopted to <span class="blank" id="b6">___________</span> collaboration between students.
+    </div>
+    <div class="hint-row">
+      <div class="hint-box">💡 Hint: replace <strong>"help / make easier"</strong></div>
+    </div>
+    <div class="options-grid">
+      <button class="opt-btn" onclick="checkFITB(this,'q6','help','facilitate')">help</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q6','make','facilitate')">make</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q6','facilitate','facilitate')">facilitate</button>
+      <button class="opt-btn" onclick="checkFITB(this,'q6','do','facilitate')">do</button>
+    </div>
+    <div class="feedback" id="fb6">
+      ✅ <strong>Correct!</strong> "Facilitate" means to make a process easier to happen — extremely common in academic and professional English.
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn outline" onclick="switchTab('match')">Try Word Matching →</button>
+  </div>
+
+  <div class="teacher-box">
+    <h4>👩‍🏫 Teacher Usage Tip</h4>
+    <p>Assign this exercise as a timed warm-up (8 minutes). After completion, ask students to write two original sentences using the words they got wrong. This forced production consolidates retention far more effectively than re-reading alone. Works well as a Bac writing preparation activity for B2–C1 groups.</p>
+  </div>
+
+</div><!-- end fitb -->
+
+<!-- ══════════════════ MATCHING SECTION ══════════════════ -->
+<div class="section" id="sec-match">
+
+  <div class="match-intro">
+    <strong>Instructions:</strong> Click a B1/B2 word on the left, then click its C1 upgrade on the right. Match all 8 pairs to complete the exercise. 🔗
+  </div>
+
+  <div class="match-grid">
+    <div>
+      <h3>B1 / B2 Words</h3>
+      <div class="match-item b1-item" id="m-b1-1" onclick="selectMatch('b1','1','think')">think</div>
+      <div class="match-item b1-item" id="m-b1-2" onclick="selectMatch('b1','2','ask')">ask</div>
+      <div class="match-item b1-item" id="m-b1-3" onclick="selectMatch('b1','3','understand')">understand</div>
+      <div class="match-item b1-item" id="m-b1-4" onclick="selectMatch('b1','4','increase')">increase</div>
+      <div class="match-item b1-item" id="m-b1-5" onclick="selectMatch('b1','5','use')">use</div>
+      <div class="match-item b1-item" id="m-b1-6" onclick="selectMatch('b1','6','argue')">argue</div>
+      <div class="match-item b1-item" id="m-b1-7" onclick="selectMatch('b1','7','need')">need</div>
+      <div class="match-item b1-item" id="m-b1-8" onclick="selectMatch('b1','8','change')">change</div>
+    </div>
+    <div>
+      <h3>C1 Upgrades</h3>
+      <div class="match-item c1-item" id="m-c1-A" onclick="selectMatch('c1','A','employ')">employ</div>
+      <div class="match-item c1-item" id="m-c1-B" onclick="selectMatch('c1','B','grasp')">grasp</div>
+      <div class="match-item c1-item" id="m-c1-C" onclick="selectMatch('c1','C','necessitate')">necessitate</div>
+      <div class="match-item c1-item" id="m-c1-D" onclick="selectMatch('c1','D','contend')">contend</div>
+      <div class="match-item c1-item" id="m-c1-E" onclick="selectMatch('c1','E','contemplate')">contemplate</div>
+      <div class="match-item c1-item" id="m-c1-F" onclick="selectMatch('c1','F','transform')">transform</div>
+      <div class="match-item c1-item" id="m-c1-G" onclick="selectMatch('c1','G','escalate')">escalate</div>
+      <div class="match-item c1-item" id="m-c1-H" onclick="selectMatch('c1','H','inquire')">inquire</div>
+    </div>
+  </div>
+
+  <!-- Pairs key: 1↔E, 2↔H, 3↔B, 4↔G, 5↔A, 6↔D, 7↔C, 8↔F -->
+
+  <div class="results-panel" id="match-results">
+    <div class="result-score" id="match-score-val">8/8</div>
+    <div class="result-label">Pairs matched correctly</div>
+    <div class="result-msg" id="match-msg">Outstanding! You matched all 8 pairs correctly. Your C1 vocabulary is developing brilliantly.</div>
+    <button class="retry-btn" onclick="resetMatch()">↺ Try Again</button>
+  </div>
+
+  <div class="teacher-box" style="margin-top:32px;">
+    <h4>👩‍🏫 Teacher Usage Tip</h4>
+    <p>Use this matching game as a revision activity at the end of a vocabulary lesson or as a homework consolidation task. For stronger groups (B2–C1), add a follow-up challenge: ask students to write a sentence using each C1 word that correctly reflects its register — not just its meaning.</p>
+  </div>
+
+</div><!-- end match -->
+
+</div><!-- end main -->
+
+<script>
+// ── SCORE STATE
+let score = 0, correct = 0, total = 0;
+const TOTAL_Q = 14; // 6 FITB + 8 match
+
+function updateScore() {
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('correct-display').textContent = correct;
+  document.getElementById('total-display').textContent = total;
+  document.getElementById('progress-fill').style.width = Math.round((total/TOTAL_Q)*100) + '%';
+}
+
+// ── TABS
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + tab).classList.add('active');
+  const idx = tab === 'fitb' ? 0 : 1;
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+}
+
+// ── FILL IN THE BLANK
+const answeredFITB = {};
+function checkFITB(btn, qId, chosen, correctAns) {
+  if (answeredFITB[qId]) return;
+  answeredFITB[qId] = true;
+  total++;
+
+  const card = document.getElementById(qId);
+  const fb   = document.getElementById('fb' + qId.slice(1));
+  const blank = document.getElementById('b' + qId.slice(1));
+  const btns = card.querySelectorAll('.opt-btn');
+
+  btns.forEach(b => {
+    b.disabled = true;
+    if (b.textContent.trim() === correctAns) b.classList.add('reveal-correct');
+  });
+
+  blank.textContent = correctAns;
+
+  if (chosen === correctAns) {
+    btn.classList.add('selected-correct');
+    card.classList.add('correct');
+    fb.textContent = '✅ ' + fb.textContent.replace(/^[✅❌]\s*/,'');
+    fb.className = 'feedback show correct-fb';
+    score += 10; correct++;
+  } else {
+    btn.classList.add('selected-wrong');
+    card.classList.add('wrong');
+    fb.className = 'feedback show wrong-fb';
+    fb.innerHTML = '❌ <strong>Not quite.</strong> The correct answer is <strong>"' + correctAns + '"</strong>. ' + getExplanation(correctAns);
+  }
+  updateScore();
+}
+
+function getExplanation(w) {
+  const e = {
+    'elaborate on':'It means to give more detail — common in academic and professional English.',
+    'maintained':'It means to continue holding a belief or position firmly.',
+    'deteriorate':'A single C1 verb meaning to become progressively worse.',
+    'detrimental':'It means harmful or damaging — collocates naturally with "effects".',
+    'demonstrate':'The standard academic verb for presenting evidence.',
+    'facilitate':'To make a process easier to happen — very common in formal writing.'
+  };
+  return e[w] || '';
+}
+
+// ── MATCHING GAME
+const matchPairs = {'1':'E','2':'H','3':'B','4':'G','5':'A','6':'D','7':'C','8':'F'};
+let selectedB1 = null, selectedC1 = null;
+let matchedCount = 0, matchAnswered = {};
+
+function selectMatch(side, id, word) {
+  const el = document.getElementById('m-' + side + '-' + id);
+  if (el.classList.contains('matched-correct')) return;
+
+  if (side === 'b1') {
+    if (selectedB1) document.getElementById('m-b1-' + selectedB1)?.classList.remove('selected');
+    selectedB1 = id;
+    el.classList.add('selected');
+  } else {
+    if (selectedC1) document.getElementById('m-c1-' + selectedC1)?.classList.remove('selected');
+    selectedC1 = id;
+    el.classList.add('selected');
+  }
+
+  if (selectedB1 && selectedC1) {
+    const b1El = document.getElementById('m-b1-' + selectedB1);
+    const c1El = document.getElementById('m-c1-' + selectedC1);
+    const key = selectedB1 + '-' + selectedC1;
+
+    if (!matchAnswered[selectedB1]) {
+      total++;
+      if (matchPairs[selectedB1] === selectedC1) {
+        b1El.classList.remove('selected'); b1El.classList.add('matched-correct');
+        c1El.classList.remove('selected'); c1El.classList.add('matched-correct');
+        b1El.onclick = null; c1El.onclick = null;
+        score += 10; correct++; matchedCount++;
+        matchAnswered[selectedB1] = true;
+        updateScore();
+        if (matchedCount === 8) showMatchResults();
+      } else {
+        b1El.classList.remove('selected'); b1El.classList.add('matched-wrong');
+        c1El.classList.remove('selected'); c1El.classList.add('matched-wrong');
+        setTimeout(() => {
+          b1El.classList.remove('matched-wrong');
+          c1El.classList.remove('matched-wrong');
+        }, 700);
+        matchAnswered[selectedB1] = true;
+        updateScore();
+      }
+    }
+    selectedB1 = null; selectedC1 = null;
+  }
+}
+
+function showMatchResults() {
+  const panel = document.getElementById('match-results');
+  const msg = document.getElementById('match-msg');
+  const s = correct;
+  if (matchedCount === 8) {
+    msg.textContent = 'Excellent! You matched all 8 pairs. Your C1 vocabulary is developing brilliantly!';
+  } else if (matchedCount >= 6) {
+    msg.textContent = 'Well done! ' + matchedCount + '/8 matched. Review the ones you missed and try again.';
+  } else {
+    msg.textContent = matchedCount + '/8 matched. Keep practising — each error is a learning opportunity!';
+  }
+  document.getElementById('match-score-val').textContent = matchedCount + '/8';
+  panel.classList.add('show');
+}
+
+function resetMatch() {
+  matchedCount = 0; selectedB1 = null; selectedC1 = null; matchAnswered = {};
+  document.querySelectorAll('.match-item').forEach(el => {
+    el.classList.remove('matched-correct','matched-wrong','selected');
+  });
+  // re-attach handlers
+  const b1 = ['1','2','3','4','5','6','7','8'];
+  const words_b1 = ['think','ask','understand','increase','use','argue','need','change'];
+  const c1 = ['A','B','C','D','E','F','G','H'];
+  const words_c1 = ['employ','grasp','necessitate','contend','contemplate','transform','escalate','inquire'];
+  b1.forEach((id,i) => document.getElementById('m-b1-'+id).onclick = () => selectMatch('b1',id,words_b1[i]));
+  c1.forEach((id,i) => document.getElementById('m-c1-'+id).onclick = () => selectMatch('c1',id,words_c1[i]));
+  document.getElementById('match-results').classList.remove('show');
+}
+</script>
+</body>
+</html>
